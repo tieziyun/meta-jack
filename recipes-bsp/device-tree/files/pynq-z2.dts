@@ -55,6 +55,67 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
+
+		amba_pl: amba_pl {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			interrupt-parent = <&intc>;
+			ranges;
+
+			axi_vdma_0: dma@43000000 {
+				compatible = "xlnx,axi-vdma-1.00.a";
+				reg = <0x43000000 0x1000>;
+				#dma-cells = <1>;
+				dma-ranges = <0x0 0x0 0x0 0x40000000>;
+				clocks = <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>, <&clkc 15>;
+				clock-names = "s_axi_lite_aclk", "m_axi_aclk", "m_axi_mm2s_aclk", "m_axi_s2mm_aclk", "m_axi_sg_aclk", "m_axis_mm2s_aclk", "s_axis_s2mm_aclk";
+				xlnx,num-fstores = <1>;
+				xlnx,flush-fsync = <2>;
+				xlnx,addrwidth = <0x20>;
+				phandle = <10>;
+
+				dma-channel@0 {
+					compatible = "xlnx,axi-vdma-mm2s-channel";
+					xlnx,datawidth = <64>;
+					interrupt-parent = <&intc>;
+					interrupts = <0 30 4>;
+				};
+			};
+
+			axi_dynclk_0: axi-dynclk@43c10000 {
+				compatible = "dglnt,axi-dynclk";
+				reg = <0x43c10000 0x1000>;
+				clocks = <&clkc 15>;
+				#clock-cells = <0>;
+			};
+
+			v_tc_0: v-timing-controller@43c00000 {
+				compatible = "xlnx,bridge-v-tc-6.1";
+				reg = <0x43c00000 0x1000>;
+				interrupts = <0 60 4>;
+				interrupt-parent = <&intc>;
+				xlnx,pixels-per-clock = <1>;
+			};
+
+			digilent_hdmi_0: digilent-hdmi@43c30000 {
+				compatible = "digilent,hdmi";
+				reg = <0x43c30000 0x1000>;
+				clocks = <&axi_dynclk_0>;
+				clock-names = "clk";
+				digilent,edid-i2c = <&i2c0>;
+				digilent,fmax = <150000>;
+			};
+
+			xlnx_pl_disp_0: xlnx-pl-disp@43c20000 {
+				compatible = "xlnx,pl-disp";
+				reg = <0x43c20000 0x1000>;
+				dmas = <&axi_vdma_0 0>;
+				dma-names = "dma0";
+				xlnx,vformat = "XR24";
+				xlnx,bridge = <&v_tc_0>;
+			};
+		};
 	};
 
 	regulator_vccpint: fixedregulator {
@@ -77,7 +138,7 @@
 
 	amba: axi {
 		bootph-all;
-		compatible = "simple-bus";
+		compatible = "simple-mfd";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		interrupt-parent = <&intc>;
@@ -314,66 +375,5 @@
 			#size-cells = <0>;
 		};
 
-		amba_pl: axi {
-			compatible = "simple-bus";
-			#address-cells = <1>;
-			#size-cells = <1>;
-			interrupt-parent = <&intc>;
-			ranges;
-
-			axi_vdma_0: dma@43000000 {
-				compatible = "xlnx,axi-vdma-6.3";
-				reg = <0x43000000 0x1000>;
-				interrupt-parent = <&intc>;
-				interrupts = <0 59 4>, <0 59 4>;
-				#dma-cells = <1>;
-				dma-ranges = <0x00000000 0x00000000 0x40000000>;
-			};
-
-			axi_dynclk_0: axi-dynclk@43c10000 {
-				compatible = "dglnt,axi-dynclk";
-				reg = <0x43c10000 0x1000>;
-				clocks = <&clkc 15>;
-				#clock-cells = <0>;
-			};
-
-			v_tc_0: v-timing-controller@43c00000 {
-				compatible = "xlnx,bridge-v-tc-6.1";
-				reg = <0x43c00000 0x1000>;
-				interrupts = <0 60 4>;
-				interrupt-parent = <&intc>;
-				xlnx,pixels-per-clock = <1>;
-			};
-
-			digilent_hdmi_0: digilent-hdmi@43c30000 {
-				compatible = "digilent,hdmi";
-				reg = <0x43c30000 0x1000>;
-				clocks = <&axi_dynclk_0>;
-				clock-names = "clk";
-				digilent,edid-i2c = <&i2c0>;
-				digilent,fmax = <150000>;
-
-				port@0 {
-					hdmi_ep: endpoint {
-						remote-endpoint = <&pl_disp_ep>;
-					};
-				};
-			};
-
-			xlnx_pl_disp_0: xlnx-pl-disp@43c20000 {
-				compatible = "xlnx,pl-disp";
-				reg = <0x43c20000 0x1000>;
-				dmas = <&axi_vdma_0 0>;
-				dma-names = "dma0";
-				xlnx,vformat = "XR24";
-				xlnx,bridge = <&v_tc_0>;
-
-				port@0 {
-					pl_disp_ep: endpoint {
-						remote-endpoint = <&hdmi_ep>;
-					};
-				};
-			};
-		};
 	};
 };

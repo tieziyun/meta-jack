@@ -45,7 +45,7 @@ with zipfile.ZipFile(xsa) as z:
 	# Create BIF file that bootgen can read (with absolute path)
 	printf "all: {\n\t${S}/design_1_wrapper.bit\n}\n" > "$biffile"
 
-	bootgen -image "$biffile" -arch zynq -process_bitstream bin -o "$binfile"
+	bootgen -image "$biffile" -arch zynq -process_bitstream bin -w on -o "$binfile"
 
 	# bootgen appends .bin to input, so rename to expected name
 	if [ -f "${bitfile}.bin" ] && [ ! -f "$binfile" ]; then
