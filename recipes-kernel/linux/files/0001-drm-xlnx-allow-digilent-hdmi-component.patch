@@ -1,0 +1,27 @@
+From: tieziyun <tieziyun@gmail.com>
+Subject: [PATCH] drm: xlnx: add digilent,hdmi to compatible components list
+
+The xlnx DRM master only binds components whose compatible string is in
+xlnx_compatible_components_list. The out-of-tree Digilent HDMI encoder
+(digilent,hdmi) registers itself as a component and is discovered
+through the of_graph endpoint on the xlnx,pl-disp node, but the
+whitelist filter skips it, so the master match never completes and no
+DRM device is created. Add the compatible so the encoder can bind, as
+it did on 5.15 kernels that predate this filter.
+
+Upstream-Status: Inappropriate [enables out-of-tree driver]
+---
+ drivers/gpu/drm/xlnx/xlnx_drv.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+--- a/drivers/gpu/drm/xlnx/xlnx_drv.c
++++ b/drivers/gpu/drm/xlnx/xlnx_drv.c
+@@ -323,7 +323,8 @@ static const char * const xlnx_compatible_components_list[] = {
+ 	"xlnx,vpss-scaler",
+ 	"xlnx,vpss-scaler-2.2",
+ 	"xlnx,sdi-tx",
+ 	"xlnx,bridge-v-tc-6.1",
++	"digilent,hdmi",
+ };
+
+ static bool xlnx_check_compatible_component(struct device_node *node)
