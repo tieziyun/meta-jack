@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI:append = " file://xdp-bpf.cfg file://display.cfg file://debug.cfg"
+SRC_URI:append = " file://display.cfg file://debug.cfg"
 
 # xlnx DRM master filters components by a hardcoded compatible whitelist;
 # out-of-tree digilent,hdmi encoder must be added or it never binds.
