@@ -1,0 +1,16 @@
+[Unit]
+Description=jack-panel Qt UI on the HDMI display
+# Take the screen instead of the text login on tty1.
+Conflicts=getty@tty1.service
+After=multi-user.target
+
+[Service]
+# Detach fbcon so the kernel console stops drawing over the UI.
+ExecStartPre=/bin/sh -c 'echo 0 > /sys/class/vtcon/vtcon1/bind || true'
+ExecStart=/usr/bin/jack-panel
+Restart=on-failure
+# linuxfb is the built default platform; set explicitly for clarity.
+Environment=QT_QPA_PLATFORM=linuxfb
+
+[Install]
+WantedBy=multi-user.target
