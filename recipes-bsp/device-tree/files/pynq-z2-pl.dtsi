@@ -1,0 +1,185 @@
+// SPDX-License-Identifier: GPL-2.0+
+// PYNQ-Z2 (XC7Z020-1CLG400C): all board- and PL-specific device tree content,
+// layered over the kernel's zynq-7000.dtsi (resolved via KERNEL_INCLUDE).
+//
+// Part 1 - board: memory, console, PS clock input, enabled peripherals.
+// Part 2 - PL HDMI pipeline:
+//   DDR -> v_frmbuf_rd (DMA) -> v_axi4s_vid_out -> rgb2dvi -> HDMI,
+//   with v_tc timing and axi_dynclk pixel clock. The xlnx-pl-disp DRM bridge
+//   consumes the frmbuf DMA channel; digilent-hdmi is the DRM encoder/connector.
+//
+// Addresses / IRQs / clocks are fixed by design_1_wrapper_fb.xsa:
+//   frmbuf ctrl 0x43c20000, vtc 0x43c00000, dynclk 0x43c10000, gpio 0x41200000
+//   IRQ_F2P: In1 frmbuf -> SPI 62 (<0 30 4>), In2 v_tc -> SPI 63 (<0 31 4>)
+//   FCLK0 = clkc 15 (100 MHz), FCLK1 = clkc 16 (200 MHz, frmbuf ap_clk)
+
+/* ------------------------------- board ------------------------------- */
+
+/ {
+	model = "Digilent PYNQ-Z2";
+	compatible = "digilent,zynq-pynq-z2", "xlnx,zynq-7000";
+
+	aliases {
+		ethernet0 = &gem0;
+		serial0   = &uart0;
+		spi0      = &qspi;
+		mmc0      = &sdhci0;
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x20000000>;	/* 512 MB DDR3 */
+	};
+
+	chosen {
+		bootargs = "console=ttyPS0,115200 earlycon root=/dev/mmcblk0p2 rw rootwait";
+		stdout-path = "serial0:115200n8";
+	};
+
+	/* ULPI USB PHY (board) */
+	usb_phy0: usb_phy@0 {
+		#phy-cells = <0>;
+		compatible = "ulpi-phy";
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x0170>;
+		reset-gpios = <&gpio0 46 1>;
+		drv-vbus;
+	};
+};
+
+/* PYNQ-Z2 PS_CLK crystal is 50 MHz (most Zynq boards are 33.33 MHz, which is
+ * the driver default). Without this every PLL-derived rate Linux computes is
+ * 1.5x off — the UART driver then programs its baud divisor from the wrong
+ * uart_clk and the 115200 console comes out as garbage (~172800 actual). */
+&clkc {
+	ps-clk-frequency = <50000000>;
+};
+
+/* Console (baud comes from console=ttyPS0,115200 + correct uart_clk above) */
+&uart0 {
+	status = "okay";
+};
+
+/* QSPI flash controller */
+&qspi {
+	status = "okay";
+};
+
+/* SD card (rootfs) */
+&sdhci0 {
+	status = "okay";
+};
+
+/* I2C0 — HDMI EDID/DDC bus (used by digilent-hdmi) */
+&i2c0 {
+	status = "okay";
+};
+
+/* USB0 host */
+&usb0 {
+	status = "okay";
+	dr_mode = "host";
+	phy_type = "ulpi";
+	usb-phy = <&usb_phy0>;
+};
+
+/* gem0 (Ethernet) left disabled — not used by this design. */
+
+/* -------------------------- PL HDMI pipeline -------------------------- */
+
+&amba {
+	amba_pl: amba_pl {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		interrupt-parent = <&intc>;
+		ranges;
+		/* PL masters (frmbuf) address DDR 0x0-0x20000000 (512 MB) 1:1 */
+		dma-ranges = <0x0 0x0 0x20000000>;
+
+		/* 1-bit AXI GPIO output, sole purpose: drive the frmbuf's
+		 * ap_rst_n. The frmbuf is an HLS core whose only reset is the
+		 * hardware pin, and the driver must toggle it via this GPIO. */
+		axi_gpio0: gpio@41200000 {
+			compatible = "xlnx,xps-gpio-1.00.a";
+			reg = <0x41200000 0x10000>;
+			#gpio-cells = <2>;
+			gpio-controller;
+			xlnx,all-outputs = <1>;
+			xlnx,gpio-width = <1>;
+			clocks = <&clkc 15>;
+		};
+
+		/* Video Frame Buffer Read — replaces the VDMA + subset-converter
+		 * gasket. Single ap_clk on FCLK1 (clkc 16, 200 MHz); control at
+		 * 0x43c20000; frame-done IRQ on xlconcat In1 (SPI 62). BGRX8
+		 * memory format == DRM XR24. Reset via axi_gpio0 (active-low). */
+		v_frmbuf_rd_0: v_frmbuf_rd@43c20000 {
+			compatible = "xlnx,v-frmbuf-rd-v3.0";
+			reg = <0x43c20000 0x10000>;
+			interrupt-parent = <&intc>;
+			interrupts = <0 30 4>;
+			clocks = <&clkc 16>;
+			clock-names = "ap_clk";
+			reset-gpios = <&axi_gpio0 0 1>;  /* 1 = GPIO_ACTIVE_LOW */
+			xlnx,dma-addr-width = <32>;
+			xlnx,vid-formats = "xrgb8888";
+			xlnx,pixels-per-clock = <1>;
+			/* Required by xilinx_frmbuf driver (probe -EINVAL if absent);
+			 * must match the IP's Max Columns/Rows config (3840x2160). */
+			xlnx,max-width = <3840>;
+			xlnx,max-height = <2160>;
+			#dma-cells = <1>;
+		};
+
+		axi_dynclk_0: axi-dynclk@43c10000 {
+			compatible = "dglnt,axi-dynclk";
+			reg = <0x43c10000 0x1000>;
+			clocks = <&clkc 15>;
+			#clock-cells = <0>;
+		};
+
+		v_tc_0: v-timing-controller@43c00000 {
+			compatible = "xlnx,bridge-v-tc-6.1";
+			reg = <0x43c00000 0x1000>;
+			interrupts = <0 31 4>;
+			interrupt-parent = <&intc>;
+			xlnx,pixels-per-clock = <1>;
+			/* 6.18 xlnx_vtc requires both clocks (optional on 5.15).
+			 * Video clock is the dynclk output — the pixel clock. */
+			clocks = <&clkc 15>, <&axi_dynclk_0>;
+			clock-names = "s_axi_aclk", "clk";
+		};
+
+		/* Encoder for the PL rgb2dvi IP — no AXI interface, so no reg.
+		 * Bound as a component of the xlnx DRM master, discovered via
+		 * the of_graph endpoint link from xlnx_pl_disp. */
+		digilent_hdmi_0: digilent_hdmi {
+			compatible = "digilent,hdmi";
+			clocks = <&axi_dynclk_0>;
+			clock-names = "clk";
+			digilent,edid-i2c = <&i2c0>;
+			digilent,fmax = <150000>;
+
+			port {
+				hdmi_ep: endpoint {
+					remote-endpoint = <&pl_disp_ep>;
+				};
+			};
+		};
+
+		xlnx_pl_disp_0: xlnx_pl_disp {
+			compatible = "xlnx,pl-disp";
+			dmas = <&v_frmbuf_rd_0 0>;
+			dma-names = "dma0";
+			xlnx,vformat = "XR24";
+			xlnx,bridge = <&v_tc_0>;
+
+			port {
+				pl_disp_ep: endpoint {
+					remote-endpoint = <&hdmi_ep>;
+				};
+			};
+		};
+	};
+};
