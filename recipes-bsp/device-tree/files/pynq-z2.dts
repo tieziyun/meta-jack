@@ -321,31 +321,42 @@
 			#size-cells = <1>;
 			interrupt-parent = <&intc>;
 			ranges;
-			/* PL masters (VDMA) can address DDR 0x0-0x40000000 1:1 */
-			dma-ranges = <0x0 0x0 0x40000000>;
+			/* PL masters (frmbuf) address DDR 0x0-0x20000000 (512 MB) 1:1 */
+			dma-ranges = <0x0 0x0 0x20000000>;
 
-			axi_vdma_0: dma@43000000 {
-				compatible = "xlnx,axi-vdma-1.00.a";
-				reg = <0x43000000 0x1000>;
+			/* 1-bit AXI GPIO output, sole purpose: drive the frmbuf's
+			 * ap_rst_n. The frmbuf is an HLS core whose only reset is the
+			 * hardware pin, and the driver must toggle it via this GPIO. */
+			axi_gpio0: gpio@41200000 {
+				compatible = "xlnx,xps-gpio-1.00.a";
+				reg = <0x41200000 0x10000>;
+				#gpio-cells = <2>;
+				gpio-controller;
+				xlnx,all-outputs = <1>;
+				xlnx,gpio-width = <1>;
+				clocks = <&clkc 15>;
+			};
+
+			/* Video Frame Buffer Read — replaces the VDMA + subset-converter
+			 * gasket. Single ap_clk on FCLK1 (clkc 16, 200 MHz); control at
+			 * 0x43c20000; frame-done IRQ on xlconcat In1 (SPI 62). BGRX8
+			 * memory format == DRM XR24. Reset via axi_gpio0 (active-low). */
+			v_frmbuf_rd_0: v_frmbuf_rd@43c20000 {
+				compatible = "xlnx,v-frmbuf-rd-v3.0";
+				reg = <0x43c20000 0x10000>;
+				interrupt-parent = <&intc>;
+				interrupts = <0 30 4>;
+				clocks = <&clkc 16>;
+				clock-names = "ap_clk";
+				reset-gpios = <&axi_gpio0 0 1>;  /* 1 = GPIO_ACTIVE_LOW */
+				xlnx,dma-addr-width = <32>;
+				xlnx,vid-formats = "xrgb8888";
+				xlnx,pixels-per-clock = <1>;
+				/* Required by xilinx_frmbuf driver (probe -EINVAL if absent);
+				 * must match the IP's Max Columns/Rows config (3840x2160). */
+				xlnx,max-width = <3840>;
+				xlnx,max-height = <2160>;
 				#dma-cells = <1>;
-				/* Per HWH: AXI-Lite on FCLK0 (100 MHz, clkc 15); the DMA
-				 * engine and stream side on FCLK1 (125 MHz, clkc 16).
-				 * Referencing fclk1 here keeps Linux from gating it —
-				 * with it off, the engine is dead and reads return
-				 * stale bus data. */
-				clocks = <&clkc 15>, <&clkc 16>, <&clkc 16>;
-				clock-names = "s_axi_lite_aclk", "m_axi_mm2s_aclk", "m_axis_mm2s_aclk";
-				xlnx,num-fstores = <4>;
-				xlnx,flush-fsync = <1>;
-				xlnx,addrwidth = <0x20>;
-				phandle = <10>;
-
-				dma-channel {
-					compatible = "xlnx,axi-vdma-mm2s-channel";
-					xlnx,datawidth = <32>;
-					interrupt-parent = <&intc>;
-					interrupts = <0 30 4>;
-				};
 			};
 
 			axi_dynclk_0: axi-dynclk@43c10000 {
@@ -386,7 +397,7 @@
 
 			xlnx_pl_disp_0: xlnx_pl_disp {
 				compatible = "xlnx,pl-disp";
-				dmas = <&axi_vdma_0 0>;
+				dmas = <&v_frmbuf_rd_0 0>;
 				dma-names = "dma0";
 				xlnx,vformat = "XR24";
 				xlnx,bridge = <&v_tc_0>;
