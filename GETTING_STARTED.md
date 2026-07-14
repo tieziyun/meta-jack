@@ -85,13 +85,7 @@ The current working design is `design_1_wrapper_fb.xsa` (frmbuf display pipeline
 From the project root:
 
 ```bash
-kas build sources/meta-jack/kas.yml:kas-local.yml
-```
-
-Or, for interactive bitbake use:
-
-```bash
-kas shell sources/meta-jack/kas.yml:kas-local.yml
+source sources/openembedded-core/os-init-build-env
 bitbake core-image-minimal
 ```
 
