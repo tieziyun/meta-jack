@@ -112,9 +112,10 @@ private:
                     line.section(' ', -2, -2).toLongLong() / 1024) + " MiB");
 
         // Frame-done IRQ delta over the 1 s tick = display refresh rate.
+        // xilinx_frmbuf requests its IRQ under this name; matching by name
+        // survives xlconcat rewiring (the hwirq number moves with the BD).
         for (const QString &line : readAll("/proc/interrupts").split('\n'))
-            if (line.contains("frmbuf") ||
-                (line.contains("GIC") && line.contains(" 62 "))) {
+            if (line.contains("xilinx_framebuffer")) {
                 qlonglong total = 0;
                 const QStringList cols =
                     line.simplified().split(' ').mid(1, 2); // per-CPU counts
