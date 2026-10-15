@@ -7,7 +7,7 @@ target: core-image-minimal
 
 # This file lives inside meta-jack so it is versioned with the project layer.
 # Run kas from the project root (the directory containing sources/ and build/):
-#   kas build sources/meta-jack/kas.yml:kas-local.yml
+#   kas build sources/meta-jack/kas.yml
 # The explicit path: entries keep all third-party repos under sources/.
 
 repos:
@@ -76,10 +76,8 @@ repos:
 
 local_conf_header:
   meta-jack: |
-    # Path to the Vivado-exported XSA for the PYNQ Z2 block design.
-    # Override this in a kas include file (e.g. kas-local.yml) — do not commit
-    # a machine-specific path here.
-    # HDF_PATH = "/path/to/design.xsa"
+    # Machine-local settings (HDF_PATH, WiFi credentials) live in the
+    # gitignored conf/jack-local.conf, included from conf/layer.conf.
     BB_NUMBER_THREADS = "${@os.cpu_count()}"
     PARALLEL_MAKE = "-j ${@os.cpu_count()}"
     # Dev board: root login on the UART console with an empty password.
