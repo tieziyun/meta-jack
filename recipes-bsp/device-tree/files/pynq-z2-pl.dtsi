@@ -10,7 +10,7 @@
 //
 // Addresses / IRQs / clocks are fixed by design_1_wrapper_fb.xsa:
 //   frmbuf ctrl 0x43c20000, vtc 0x43c00000, dynclk 0x43c10000, gpio 0x41200000
-//   IRQ_F2P: In1 frmbuf -> SPI 62 (<0 30 4>), In2 v_tc -> SPI 63 (<0 31 4>)
+//   IRQ_F2P: In0 frmbuf -> SPI 61 (<0 29 4>), In1 v_tc -> SPI 62 (<0 30 4>)
 //   FCLK0 = clkc 15 (100 MHz), FCLK1 = clkc 16 (200 MHz, frmbuf ap_clk)
 
 /* ------------------------------- board ------------------------------- */
@@ -112,13 +112,13 @@
 
 		/* Video Frame Buffer Read — replaces the VDMA + subset-converter
 		 * gasket. Single ap_clk on FCLK1 (clkc 16, 200 MHz); control at
-		 * 0x43c20000; frame-done IRQ on xlconcat In1 (SPI 62). BGRX8
+		 * 0x43c20000; frame-done IRQ on xlconcat In0 (SPI 61). BGRX8
 		 * memory format == DRM XR24. Reset via axi_gpio0 (active-low). */
 		v_frmbuf_rd_0: v_frmbuf_rd@43c20000 {
 			compatible = "xlnx,v-frmbuf-rd-v3.0";
 			reg = <0x43c20000 0x10000>;
 			interrupt-parent = <&intc>;
-			interrupts = <0 30 4>;
+			interrupts = <0 29 4>;
 			clocks = <&clkc 16>;
 			clock-names = "ap_clk";
 			reset-gpios = <&axi_gpio0 0 1>;  /* 1 = GPIO_ACTIVE_LOW */
@@ -142,7 +142,7 @@
 		v_tc_0: v-timing-controller@43c00000 {
 			compatible = "xlnx,bridge-v-tc-6.1";
 			reg = <0x43c00000 0x1000>;
-			interrupts = <0 31 4>;
+			interrupts = <0 30 4>;
 			interrupt-parent = <&intc>;
 			xlnx,pixels-per-clock = <1>;
 			/* 6.18 xlnx_vtc requires both clocks (optional on 5.15).
