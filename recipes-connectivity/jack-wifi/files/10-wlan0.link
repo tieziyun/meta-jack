@@ -1,0 +1,7 @@
+# Give the USB dongle a fixed name so wpa_supplicant@wlan0 and the
+# .network file find it whatever predictable-name scheme udev picks.
+[Match]
+Driver=rtl8xxxu
+
+[Link]
+Name=wlan0
