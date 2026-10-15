@@ -24,6 +24,9 @@ repos:
     branch: "2.8"
     commit: 0880963fea4d91a034e4a6e007d23f98658ab986
     path: sources/bitbake
+    # bitbake is not a layer; without this kas adds the repo root to BBLAYERS
+    layers:
+      .: disabled
 
   meta-openembedded:
     url: https://git.openembedded.org/meta-openembedded
