@@ -28,8 +28,8 @@ kas shell sources/meta-jack/kas.yml -c "bitbake -p"
 ```
 
 Success looks like `Parsing of N .bb files complete (... 0 errors)`. The
-warnings about `zynq-generic` being an include-only machine, the ZynqMP pmu-rom,
-meta-xilinx-tools without XILINX_WITH_ESW, and WSLv2 are expected noise.
+warnings about `zynq-generic` being an include-only machine, the ZynqMP pmu-rom
+and WSLv2 are expected noise.
 
 ## Host notes
 

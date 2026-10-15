@@ -13,7 +13,7 @@ from parsing to the flashable `.wic` image.
 | **Recipe (`.bb`)** | Instructions to build one package: where to get source, how to configure/compile/install | `recipes-apps/jack-panel/jack-panel_1.0.bb` |
 | **Append (`.bbappend`)** | A patch onto someone else's recipe without forking it | `recipes-kernel/linux/linux-xlnx_%.bbappend` |
 | **Class (`.bbclass`)** | Reusable build logic recipes `inherit` | `qt6-cmake`, `systemd`, `kernel`, `image` |
-| **kas** | A wrapper that clones the layers at pinned commits and generates the build config | `kas.yml`, `kas-local.yml` |
+| **kas** | A wrapper that clones the layers at pinned commits and generates the build config | `kas.yml` |
 
 Key mental model: **BitBake doesn't know anything about compiling C code.**
 It is a generic engine that (1) parses metadata into a giant variable store,
@@ -23,11 +23,11 @@ classes) supplied by the layers.
 
 ## Step 0: what kas set up before bitbake ever runs
 
-You never hand-write the build config in this project; `kas build kas.yml:kas-local.yml`
+You never hand-write the build config in this project; `kas build kas.yml`
 (or `kas shell`) does it:
 
 1. Clones every repo in `kas.yml` at the **pinned commit** (e.g. oe-core on
-   `scarthgap` @ `d4950d6d`, meta-xilinx on `rel-v2026.1`). This is why the
+   `wrynose` @ `0f03c732`, meta-xilinx on `wrynose`). This is why the
    build is reproducible.
 2. Writes `build/conf/bblayers.conf` — the layer list, one line per layer from
    the `layers:` keys in `kas.yml`.
@@ -76,7 +76,7 @@ invocation starts much faster.
 ```bitbake
 IMAGE_INSTALL:append = " jack-panel"   # append (note the leading space)
 MACHINE ?= "zynq-generic"              # default — only if not already set
-HDF_PATH ?= "/home/jack/...fb.xsa"     # kas-local.yml's hard = wins over this ?=
+HDF_PATH ?= "/home/jack/...fb.xsa"     # jack-local.conf's hard = wins over this ?=
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"  # := expands immediately
 SRC_URI:append:zynq = " file://foo"    # override — only for zynq machines
 ```
@@ -400,7 +400,7 @@ Inspect any built .wic without flashing: `fdisk -l <image>.wic`, or
 ## The whole flow in one picture
 
 ```
-kas.yml ──clone/pin──▶ sources/*        kas-local.yml ─▶ HDF_PATH
+kas.yml ──clone/pin──▶ sources/*      jack-local.conf ─▶ HDF_PATH
                 │                                          │
                 ▼                                          ▼
         build/conf/{bblayers,local}.conf ◀─────────────────┘
@@ -428,7 +428,7 @@ kas.yml ──clone/pin──▶ sources/*        kas-local.yml ─▶ HDF_PATH
 ## Handy commands for poking at all this
 
 ```sh
-kas shell kas.yml:kas-local.yml          # drop into a configured build env
+kas shell sources/meta-jack/kas.yml      # drop into a configured build env
 
 bitbake core-image-minimal               # the full build
 bitbake -e jack-panel | less             # final expanded variables (+ history
