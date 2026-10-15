@@ -7,8 +7,8 @@ SRC_URI:append = " file://display.cfg file://debug.cfg file://wifi.cfg"
 SRC_URI:append = " file://0001-drm-xlnx-allow-digilent-hdmi-component.patch"
 
 do_configure:append() {
-	cat ${WORKDIR}/display.cfg >> ${B}/.config
-	cat ${WORKDIR}/debug.cfg >> ${B}/.config
-	cat ${WORKDIR}/wifi.cfg >> ${B}/.config
+	cat ${UNPACKDIR}/display.cfg >> ${B}/.config
+	cat ${UNPACKDIR}/debug.cfg >> ${B}/.config
+	cat ${UNPACKDIR}/wifi.cfg >> ${B}/.config
 	oe_runmake -C ${B} oldconfig
 }

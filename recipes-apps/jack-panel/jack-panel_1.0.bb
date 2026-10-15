@@ -12,12 +12,12 @@ SRC_URI = " \
     file://jack-panel.service \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 DEPENDS = "qtbase"
 
 do_install:append() {
-    install -Dm 0644 ${WORKDIR}/jack-panel.service \
+    install -Dm 0644 ${UNPACKDIR}/jack-panel.service \
         ${D}${systemd_system_unitdir}/jack-panel.service
 }
 

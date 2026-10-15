@@ -5,4 +5,4 @@ inherit module
 
 SRC_URI = "file://Makefile file://digilent-hdmi.c"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"

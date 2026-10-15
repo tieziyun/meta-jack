@@ -9,7 +9,7 @@ SRC_URI = " \
     file://30-wlan0.network \
 "
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 # Credentials come from the gitignored conf/jack-local.conf. Left empty, the
 # image boots with no network configured; add one on the board with wpa_cli
@@ -45,9 +45,9 @@ python do_compile() {
 do_install() {
     install -Dm 0600 ${B}/wpa_supplicant-wlan0.conf \
         ${D}${sysconfdir}/wpa_supplicant/wpa_supplicant-wlan0.conf
-    install -Dm 0644 ${WORKDIR}/10-wlan0.link \
+    install -Dm 0644 ${UNPACKDIR}/10-wlan0.link \
         ${D}${sysconfdir}/systemd/network/10-wlan0.link
-    install -Dm 0644 ${WORKDIR}/30-wlan0.network \
+    install -Dm 0644 ${UNPACKDIR}/30-wlan0.network \
         ${D}${sysconfdir}/systemd/network/30-wlan0.network
 
     # Start wpa_supplicant when wlan0 appears rather than from multi-user:

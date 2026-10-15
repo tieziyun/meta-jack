@@ -5,7 +5,7 @@ inherit deploy
 
 DEPENDS = "virtual/bootloader bootgen-native"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 BITSTREAM_NAME ?= "${MACHINE}"
 BITSTREAM_BASE_NAME ?= "${BITSTREAM_NAME}${IMAGE_VERSION_SUFFIX}"

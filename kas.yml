@@ -13,16 +13,16 @@ target: core-image-minimal
 repos:
   openembedded-core:
     url: https://git.openembedded.org/openembedded-core
-    branch: scarthgap
-    commit: d4950d6df0867dcd5c380d83ac4d138ec968e698
+    branch: wrynose
+    commit: 0f03c732a0a2d0506b41b1abe60b3f368b2300dc
     path: sources/openembedded-core
     layers:
       meta:
 
   bitbake:
     url: https://git.openembedded.org/bitbake
-    branch: "2.8"
-    commit: 0880963fea4d91a034e4a6e007d23f98658ab986
+    branch: "2.18"
+    commit: 51fd94a67fa17650a9ff623492005972bbc7d26f
     path: sources/bitbake
     # bitbake is not a layer; without this kas adds the repo root to BBLAYERS
     layers:
@@ -30,8 +30,8 @@ repos:
 
   meta-openembedded:
     url: https://git.openembedded.org/meta-openembedded
-    branch: scarthgap
-    commit: b0c2c648a1af89e7a8dd4c2ec841f3bc0ed0ccb9
+    branch: wrynose
+    commit: f28a144aa0a0ae05ca2ee91e1aef6aa05f6a12db
     path: sources/meta-openembedded
     layers:
       meta-oe:
@@ -39,8 +39,8 @@ repos:
 
   meta-arm:
     url: https://git.yoctoproject.org/meta-arm
-    branch: scarthgap
-    commit: 23b572c40ea6709ab3f8bd7abbb5a795fc3631c2
+    branch: wrynose
+    commit: 673e8d7c5dcd14de58092eb73e6ecc5eee5c1735
     path: sources/meta-arm
     layers:
       meta-arm-toolchain:
@@ -48,23 +48,17 @@ repos:
 
   meta-xilinx:
     url: https://github.com/Xilinx/meta-xilinx
-    branch: rel-v2026.1
-    commit: 63094feee6c1c310f62bd3a9957a64ed52f1fdc1
+    branch: wrynose
+    commit: 1231e93e0aa083d67ad60e9670733addcc501e92
     path: sources/meta-xilinx
     layers:
       meta-xilinx-core:
       meta-xilinx-standalone:
 
-  meta-xilinx-tools:
-    url: https://github.com/Xilinx/meta-xilinx-tools
-    branch: rel-v2026.1
-    commit: 94fea5f042e34522e9caf70c134817a046ca7e08
-    path: sources/meta-xilinx-tools
-
   meta-qt6:
     url: https://code.qt.io/yocto/meta-qt6.git
-    branch: "6.8"
-    commit: 2a9a0070f652134e15df332918a012862bf34047
+    branch: "6.11"
+    commit: ec98b3ab1c8deeab9412ef6cbfd55729dc567b01
     path: sources/meta-qt6
     layers:
       .:

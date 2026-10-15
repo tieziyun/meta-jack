@@ -9,5 +9,5 @@ INHIBIT_PACKAGE_STRIP = "1"
 SRC_URI = "file://Makefile \
            file://clk-dglnt-dynclk.c"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
