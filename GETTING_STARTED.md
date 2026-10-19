@@ -1,10 +1,10 @@
 # Getting Started
 
-Quick-start guide for setting up the FPGA-backed XDP SmartNIC project (PYNQ Z2 / Zynq XC7Z020) from scratch on a new machine.
+Quick-start guide for setting up the PYNQ-Z2 (Zynq XC7Z020) HDMI video / Qt project from scratch on a new machine.
 
 All third-party Yocto layers are managed by [kas](https://kas.readthedocs.io/) and pinned in [`kas.yml`](kas.yml), which lives in this repo — you do **not** clone them by hand. The only repository you clone yourself is `meta-jack` (this one).
 
-For the project background, architecture, and build details, see `readme.md` in the project root.
+For a project overview, layer contents and common tasks, see [README.md](README.md).
 
 ---
 
@@ -34,8 +34,8 @@ pipx install kas
 ## 2. Create the project layout and clone the repositories
 
 ```bash
-mkdir -p ~/Projects/fpga-network-project/sources
-cd ~/Projects/fpga-network-project
+mkdir -p ~/zynq-yocto-project/sources
+cd ~/zynq-yocto-project
 
 # The project layer — the only repo you clone manually
 git clone https://github.com/tieziyun/meta-jack.git sources/meta-jack
@@ -84,7 +84,7 @@ The current working design is `design_1_wrapper_fb.xsa` (frmbuf display pipeline
 From the project root:
 
 ```bash
-source sources/openembedded-core/os-init-build-env
+source sources/openembedded-core/oe-init-build-env
 bitbake core-image-minimal
 ```
 
@@ -101,7 +101,7 @@ Build output lands in `build/tmp/deploy/images/zynq-generic/` — boot binary (`
 3. Connect UART (115200 8N1) and Ethernet, power on.
 4. Verify networking: `ping`/SSH over the GEM interface (`eth0`).
 
-Boot verification checklists are in `BOOT_TESTS.md` in the project root.
+See [README.md § Flash and boot](README.md#flash-and-boot) for flashing commands and on-board checks.
 
 ---
 
